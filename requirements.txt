@@ -1,0 +1,7 @@
+flask
+pandas
+numpy
+xarray
+netcdf4
+shapely
+plotly

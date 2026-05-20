@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Климатические индексы Иркутской области</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.1.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .toggle-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .toggle-btn {
+            padding: 12px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+
+        .toggle-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.3);
+        }
+
+        .mode-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .mode-btn.active {
+            background: rgba(255,255,255,0.3);
+            border-color: white;
+        }
+
+        .controls {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .control-group input, .control-group select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .control-group input:focus, .control-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        #map {
+            height: 600px;
+            border-radius: 10px;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 20px;
+            border-radius: 3px;
+        }
+
+        .info-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .info-content {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            flex: 1;
+            min-width: 180px;
+            max-width: 220px;
+            padding: 15px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .info-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .info-card h4 {
+            margin-bottom: 10px;
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .info-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .info-card .unit {
+            font-size: 11px;
+            color: #888;
+            margin-top: 3px;
+        }
+
+        .info-card .level {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .detail-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .detail-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        #graph {
+            height: 400px;
+            border-radius: 10px;
+        }
+
+        .selected-info {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f0f8ff;
+            border-radius: 8px;
+            text-align: center;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            overflow: auto;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 1200px;
+            border-radius: 15px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #333;
+        }
+
+        .close-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .raster-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        #rasterMap {
+            height: 450px;
+            margin-bottom: 20px;
+        }
+
+        #rasterHistogram {
+            height: 350px;
+        }
+
+        .district-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px;
+            min-width: 200px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .district-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .sights-list {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 10px;
+            text-align: left;
+        }
+
+        .sight-item {
+            padding: 8px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .recommendations-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .recommendations-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recommendations-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .rec-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 4px solid #e74c3c;
+            min-width: 180px;
+            flex: 1;
+            color: #333;
+        }
+
+        .rec-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .rec-item.rank-1 { border-left-color: #f1c40f; }
+        .rec-item.rank-2 { border-left-color: #e0e0e0; }
+        .rec-item.rank-3 { border-left-color: #cd7f32; }
+
+        .rec-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .rec-rating {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .rec-stats {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .rec-stats span {
+            color: #666;
+        }
+
+        .highlighted-district {
+            filter: drop-shadow(0 0 8px #e74c3c);
+        }
+
+        .recommend-mode-btn {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .recommend-mode-btn.active {
+            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+            box-shadow: 0 5px 15px rgba(230,126,34,0.4);
+        }
+
+        /* === ПРЕВРАЩАЕМ КНОПКИ СЕЗОНОВ В ЦВЕТНЫЕ ОВАЛЫ === */
+
+        /* Кнопка "СЕЗОННЫЙ ОТДЫХ" */
+        #rec_type_seasonal {
+            background: #3498db !important; /* Красивый синий цвет */
+            color: white !important;
+            border-radius: 20px !important; /* Делаем овальной */
+            border: none !important;
+            font-weight: bold;
+        }
+
+        /* Кнопки "Зимний", "Летний" и "Круглогодичный" внутри белой панели */
+        #season_select_container .mode-btn {
+            color: white !important;
+            border-radius: 20px !important; /* Форма овала */
+            border: none !important;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Индивидуальные цвета для каждого сезона */
+        #season_winter {
+            background: #2980b9 !important; /* Темно-синий овал для зимы */
+        }
+        #season_summer {
+            background: #f39c12 !important; /* Оранжевый овал для лета */
+        }
+        #season_year {
+            background: #8e44ad !important; /* Фиолетовый овал для круглогодичного */
+        }
+
+        /* Стили для нажатых (активных) кнопок сезонов, чтобы они выделялись */
+        #season_select_container .mode-btn.active,
+        #rec_type_seasonal.active {
+            background: #2c3e50 !important; /* Темный овал при нажатии */
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+            transform: scale(0.95);
+        }
+
+
+                /* === ПОЛНОЕ ИСПРАВЛЕНИЕ ЦВЕТА ТЕКСТА В РЕКОМЕНДАЦИЯХ === */
+        .recommendations-list .rec-item,
+        .recommendations-list .rec-item * {
+            color: #333 !important;
+        }
+
+        .recommendations-list .rec-item .rec-name {
+            color: #333 !important;
+            font-weight: 600;
+        }
+
+        .recommendations-list .rec-item .rec-rating {
+            color: #555 !important;
+        }
+
+        .recommendations-list .rec-item .rec-stats,
+        .recommendations-list .rec-item .rec-stats span {
+            color: #666 !important;
+        }
+
+        .rec-item.rank-1,
+        .rec-item.rank-2,
+        .rec-item.rank-3 {
+            color: #333 !important;
+        }
+
+        .rec-item.rank-1 .rec-name,
+        .rec-item.rank-2 .rec-name,
+        .rec-item.rank-3 .rec-name {
+            color: #333 !important;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌡️ Климатические индексы Иркутской области</h1>
+            <p>Анализ туристического и теплового комфорта | 2004-2024 гг.</p>
+        </div>
+
+        <div class="toggle-buttons">
+            <div class="toggle-btn" id="btn-tci" onclick="setIndex('tci')">🌿 TCI (Туристический комфорт)</div>
+            <div class="toggle-btn" id="btn-utci" onclick="setIndex('utci')">🔥 UTCI (Тепловой комфорт)</div>
+            <div class="toggle-btn" id="btn-tourism" onclick="setIndex('tourism')">🏛️ Туристические объекты</div>
+            <div class="toggle-btn recommend-mode-btn" id="btn-recommend" onclick="setIndex('recommend')">🏆 Куда поехать?</div>
+        </div>
+
+        <div class="mode-buttons" id="mode-buttons">
+            <div class="mode-btn" id="btn-actual" onclick="setMode('actual')">📅 Фактические данные</div>
+            <div class="mode-btn" id="btn-period" onclick="setMode('period')">📊 За последние годы</div>
+            <div class="mode-btn" id="btn-avg" onclick="setMode('avg')">📈 Средние многолетние</div>
+        </div>
+
+        <!-- Панель рекомендаций -->
+        <div id="recommendations_panel" class="recommendations-panel" style="display: none;">
+            <div class="recommendations-title">
+                🏆 Куда поехать?
+                <span id="recommend_month_name" style="font-size: 13px; color: #666;"></span>
+                <span id="recommend_period_text" style="font-size: 12px; color: #999; margin-left: 10px;"></span>
+            </div>
+
+            <!-- ПОДВКЛАДКИ (как в TCI) -->
+            <div class="mode-buttons" style="margin-bottom: 15px;">
+                <div class="mode-btn" id="rec_type_comfort" onclick="setRecType('comfort')" style="background:#2ecc71;">🌡️ КОМФОРТНЫЙ ОТДЫХ</div>
+                <div class="mode-btn" id="rec_type_seasonal" onclick="setRecType('seasonal')">🎯 СЕЗОННЫЙ ОТДЫХ</div>
+            </div>
+
+            <!-- ВЫБОР СЕЗОНА (показывается только при СЕЗОННЫЙ ОТДЫХ) -->
+            <div id="season_select_container" class="mode-buttons" style="margin-bottom: 15px; display: none;">
+                <div class="mode-btn" id="season_winter" onclick="setSeason('winter')">❄️ Зимний</div>
+                <div class="mode-btn" id="season_summer" onclick="setSeason('summer')">☀️ Летний</div>
+                <div class="mode-btn" id="season_year" onclick="setSeason('year')">🏛️ Круглогодичный</div>
+            </div>
+
+            <div class="controls" style="background: transparent; padding: 0 0 10px 0; box-shadow: none;">
+                <div class="control-group">
+                    <label>📆 Месяц</label>
+                    <select id="recommend_month">
+                        <option value="1">Январь</option>
+                        <option value="2">Февраль</option>
+                        <option value="3">Март</option>
+                        <option value="4">Апрель</option>
+                        <option value="5">Май</option>
+                        <option value="6">Июнь</option>
+                        <option value="7" selected>Июль</option>
+                        <option value="8">Август</option>
+                        <option value="9">Сентябрь</option>
+                        <option value="10">Октябрь</option>
+                        <option value="11">Ноябрь</option>
+                        <option value="12">Декабрь</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>📊 Период</label>
+                    <select id="recommend_period">
+                        <option value="10" selected>Последние 10 лет</option>
+                        <option value="5">Последние 5 лет</option>
+                        <option value="3">Последние 3 года</option>
+                        <option value="avg">Средние многолетние</option>
+                    </select>
+                </div>
+                <button onclick="updateRecommendations()">🔍 Показать лучшие районы</button>
+            </div>
+            <div id="recommendations_list" class="recommendations-list">
+                <!-- Список рекомендаций будет здесь -->
+            </div>
+        </div>
+
+        <div class="controls" id="climate-controls">
+            <div class="control-group" id="year-group">
+                <label>📅 Год</label>
+                <input type="number" id="year" value="2024" min="2004" max="2024" step="1">
+            </div>
+            <div class="control-group" id="period-group" style="display: none;">
+                <label>📊 Количество лет</label>
+                <select id="period_years">
+                    <option value="1">Последний год</option>
+                    <option value="2">Последние 2 года</option>
+                    <option value="3">Последние 3 года</option>
+                    <option value="5" selected>Последние 5 лет</option>
+                    <option value="7">Последние 7 лет</option>
+                    <option value="10">Последние 10 лет</option>
+                    <option value="15">Последние 15 лет</option>
+                    <option value="21">Весь период (2004-2024)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>📆 Месяц</label>
+                <input type="number" id="month" min="1" max="12" value="7">
+            </div>
+            <button onclick="updateMap()">🔄 Обновить карту</button>
+        </div>
+
+        <div class="controls" id="tourism-controls" style="display: none;">
+            <div class="control-group">
+                <label>📆 Месяц (для TCI)</label>
+                <input type="number" id="tourism_month" min="1" max="12" value="7">
+            </div>
+            <div class="control-group">
+                <label>🏷️ Тип туризма</label>
+                <select id="sights_category">
+                    <option value="Все">Загрузка...</option>
+                </select>
+            </div>
+            <button onclick="updateTourismMap()">🔄 Показать объекты</button>
+            <button onclick="showDistrictsAnalysis()" style="background:#3498db;">📊 Районы Иркутской области</button>
+        </div>
+
+        <div class="card">
+            <h3 id="map-title">🗺️ Карта климатического индекса</h3>
+            <div id="map"></div>
+            <div class="legend" id="legend"></div>
+            <div class="selected-info" id="selected-info">
+                💡 Нажмите на любой район, чтобы увидеть подробную информацию
+            </div>
+        </div>
+
+        <div class="info-panel" id="info-panel">
+            <h3>📊 Детальная информация о районе</h3>
+            <div class="info-content" id="info-content"></div>
+            <div id="graph"></div>
+        </div>
+
+        <div class="footer">
+            <p>TCI (0-100 баллов) — Туристический климатический индекс | UTCI (°C) — Универсальный тепловой индекс</p>
+            <p>Данные рассчитаны на основе метеорологических наблюдений 2004-2024 гг.</p>
+        </div>
+    </div>
+
+    <div id="rasterModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="rasterTitle">Детализация по ячейкам</h3>
+                <button class="close-btn" onclick="closeRasterModal()">✕ Закрыть</button>
+            </div>
+            <div id="rasterStats" class="raster-stats"></div>
+            <div id="rasterMap"></div>
+            <div id="rasterHistogram"></div>
+        </div>
+    </div>
+
+    <div id="districtsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="districtsTitle">📊 Районы Иркутской области</h3>
+                <button class="close-btn" onclick="closeDistrictsModal()">✕ Закрыть</button>
+            </div>
+            <div id="districtsContent"></div>
+            <div id="districtsInfo" style="margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 10px; text-align: center; font-size: 13px;">
+                💡 Кликните на район, чтобы показать его достопримечательности на карте
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentIndex = 'tci';
+        let currentMode = 'actual';
+        let currentMapData = null;
+        let currentDate = null;
+        let sightsCategories = ['Все'];
+        let selectedDistrict = null;
+        let highlightedDistricts = [];
+        let originalData = null;
+        let currentRecommendations = [];
+        let currentRecType = 'comfort';
+        let currentSeason = 'winter';
+
+        // Цвета маркеров для разных типов туризма
+        const categoryColors = {
+            'Природный': '#2ecc71',
+            'Развлекательный': '#e67e22',
+            'Лечебно-оздоровительный': '#1abc9c',
+            'Культурно-познавательный': '#9b59b6',
+            'Религиозный': '#f1c40f',
+            'Активный': '#e74c3c',
+            'Сельский': '#27ae60',
+            'Событийный': '#3498db'
+        };
+
+        // Иконки для категорий
+        const categoryIcons = {
+            'Активный': '🏃',
+            'Природный': '🌲',
+            'Культурно-познавательный': '🏛️',
+            'Развлекательный': '🎢',
+            'Лечебно-оздоровительный': '💊',
+            'Религиозный': '⛪',
+            'Сельский': '🌾',
+            'Событийный': '🎉',
+            'Все': '📍'
+        };
+
+        function setRecType(type) {
+            currentRecType = type;
+            document.getElementById('rec_type_comfort').classList.toggle('active', type === 'comfort');
+            document.getElementById('rec_type_seasonal').classList.toggle('active', type === 'seasonal');
+
+            const seasonContainer = document.getElementById('season_select_container');
+            if (type === 'seasonal') {
+                seasonContainer.style.display = 'flex';
+            } else {
+                seasonContainer.style.display = 'none';
+            }
+            updateRecommendations();
+        }
+
+        function setSeason(season) {
+            currentSeason = season;
+            document.getElementById('season_winter').classList.toggle('active', season === 'winter');
+            document.getElementById('season_summer').classList.toggle('active', season === 'summer');
+            document.getElementById('season_year').classList.toggle('active', season === 'year');
+            updateRecommendations();
+        }
+
+        function setIndex(idx) {
+            currentIndex = idx;
+            document.getElementById('btn-tci').classList.toggle('active', idx === 'tci');
+            document.getElementById('btn-utci').classList.toggle('active', idx === 'utci');
+            document.getElementById('btn-tourism').classList.toggle('active', idx === 'tourism');
+            document.getElementById('btn-recommend').classList.toggle('active', idx === 'recommend');
+
+            const climateControls = document.getElementById('climate-controls');
+            const tourismControls = document.getElementById('tourism-controls');
+            const modeButtons = document.getElementById('mode-buttons');
+            const recommendationsPanel = document.getElementById('recommendations_panel');
+            const mapTitle = document.getElementById('map-title');
+
+            if (idx === 'tourism') {
+                climateControls.style.display = 'none';
+                tourismControls.style.display = 'flex';
+                modeButtons.style.display = 'none';
+                recommendationsPanel.style.display = 'none';
+                mapTitle.innerHTML = '🗺️ Туристические объекты Иркутской области';
+                selectedDistrict = null;
+                updateTourismMap();
+            } else if (idx === 'recommend') {
+                climateControls.style.display = 'none';
+                tourismControls.style.display = 'none';
+                modeButtons.style.display = 'none';
+                recommendationsPanel.style.display = 'block';
+                mapTitle.innerHTML = '🏆 Рекомендации: лучшие районы для отдыха';
+                updateRecommendations();
+            } else {
+                climateControls.style.display = 'flex';
+                tourismControls.style.display = 'none';
+                modeButtons.style.display = 'flex';
+                recommendationsPanel.style.display = 'none';
+                mapTitle.innerHTML = '🗺️ Карта климатического индекса';
+                updateMap();
+            }
+        }
+
+        function setMode(mode) {
+            if (currentIndex === 'recommend') return;
+
+            currentMode = mode;
+            document.getElementById('btn-actual').classList.toggle('active', mode === 'actual');
+            document.getElementById('btn-period').classList.toggle('active', mode === 'period');
+            document.getElementById('btn-avg').classList.toggle('active', mode === 'avg');
+
+            const yearGroup = document.getElementById('year-group');
+            const periodGroup = document.getElementById('period-group');
+
+            if (mode === 'actual') {
+                yearGroup.style.display = 'flex';
+                periodGroup.style.display = 'none';
+                yearGroup.style.opacity = '1';
+                yearGroup.style.pointerEvents = 'auto';
+            } else if (mode === 'period') {
+                yearGroup.style.display = 'none';
+                periodGroup.style.display = 'flex';
+            } else if (mode === 'avg') {
+                yearGroup.style.display = 'flex';
+                periodGroup.style.display = 'none';
+                yearGroup.style.opacity = '0.5';
+                yearGroup.style.pointerEvents = 'none';
+            }
+            updateMap();
+        }
+
+        function getTciLevel(tci) {
+            if (tci >= 80) return '🏆 Отлично для туризма';
+            if (tci >= 70) return '😊 Очень хорошо';
+            if (tci >= 60) return '👍 Хорошо';
+            if (tci >= 50) return '😐 Удовлетворительно';
+            if (tci >= 40) return '😕 Плохо';
+            return '😫 Очень плохо для туризма';
+        }
+
+        function getUtciLevel(utci) {
+            if (utci > 32) return '🥵 Экстремальная жара';
+            if (utci > 26) return '🔥 Сильная жара';
+            if (utci > 20) return '🌞 Умеренная жара';
+            if (utci > 9) return '😊 Комфортно';
+            if (utci > 0) return '🧥 Легкий холод';
+            if (utci > -13) return '🧤 Умеренный холод';
+            if (utci > -27) return '❄️ Сильный холод';
+            return '🥶 Экстремальный холод';
+        }
+
+        function getTciIcon(tci) {
+            if (tci >= 80) return '🏆';
+            if (tci >= 70) return '😊';
+            if (tci >= 60) return '👍';
+            if (tci >= 50) return '😐';
+            if (tci >= 40) return '😕';
+            return '😫';
+        }
+
+        function getUtciIcon(utci) {
+            if (utci > 32) return '🥵';
+            if (utci > 26) return '🔥';
+            if (utci > 20) return '🌞';
+            if (utci > 9) return '😊';
+            if (utci > 0) return '🧥';
+            if (utci > -13) return '🧤';
+            if (utci > -27) return '❄️';
+            return '🥶';
+        }
+
+        function getTciColor(tci) {
+            if (tci >= 80) return '#006837';
+            if (tci >= 70) return '#44aa44';
+            if (tci >= 60) return '#ffff00';
+            if (tci >= 50) return '#ffcc00';
+            if (tci >= 40) return '#ff9900';
+            return '#ff0000';
+        }
+
+        function getUtciColor(utci) {
+            if (utci > 32) return '#8B0000';
+            if (utci > 26) return '#CD5C5C';
+            if (utci > 20) return '#FF6347';
+            if (utci > 9) return '#90EE90';
+            if (utci > 0) return '#87CEEB';
+            if (utci > -13) return '#6495ED';
+            if (utci > -27) return '#4169E1';
+            return '#00008B';
+        }
+
+        async function updateMap() {
+            if (currentIndex === 'recommend') return;
+
+            const month = String(document.getElementById('month').value).padStart(2, '0');
+            let requestUrl = `/api/map_data?index=${currentIndex}&mode=${currentMode}&month=${month}`;
+
+            if (currentMode === 'actual') {
+                const year = document.getElementById('year').value;
+                currentDate = `${year}-${month}`;
+                requestUrl += `&date=${currentDate}`;
+            } else if (currentMode === 'period') {
+                const yearsBack = document.getElementById('period_years').value;
+                requestUrl += `&years_back=${yearsBack}`;
+                currentDate = `period-${yearsBack}-лет`;
+            } else if (currentMode === 'avg') {
+                requestUrl += `&month=${month}`;
+                currentDate = `avg-${month}`;
+            }
+
+            try {
+                const response = await fetch(requestUrl);
+                const data = await response.json();
+                currentMapData = data;
+                originalData = data;
+
+                if (data.figData && data.figData.data && data.figData.data.length > 0) {
+                    Plotly.newPlot('map', data.figData.data, data.figData.layout, { responsive: true });
+
+                    document.getElementById('map').on('plotly_click', function(clickData) {
+                        if (clickData.points && clickData.points[0] && clickData.points[0].location) {
+                            const moName = clickData.points[0].location;
+                            showDistrictInfo(moName);
+                        }
+                    });
+                }
+
+                updateLegend();
+
+            } catch(e) {
+                console.error(e);
+                document.getElementById('map').innerHTML = '<div style="text-align:center;padding:50px;">❌ Ошибка загрузки карты</div>';
+            }
+        }
+
+        function updateLegend() {
+            const legendDiv = document.getElementById('legend');
+            if (currentIndex === 'tci') {
+                legendDiv.innerHTML = `
+                    <div class="legend-item"><div class="legend-color" style="background:#006837;"></div><span>≥80 Отлично</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#44aa44;"></div><span>70-79 Очень хорошо</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#ffff00;"></div><span>60-69 Хорошо</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#ffcc00;"></div><span>50-59 Удовлетворительно</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#ff9900;"></div><span>40-49 Плохо</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#ff0000;"></div><span>&lt;40 Очень плохо</span></div>
+                `;
+            } else if (currentIndex === 'utci') {
+                legendDiv.innerHTML = `
+                    <div class="legend-item"><div class="legend-color" style="background:#8B0000;"></div><span>&gt;32°C Экстремальная жара</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#CD5C5C;"></div><span>26-32°C Сильная жара</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#FF6347;"></div><span>20-26°C Умеренная жара</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#90EE90;"></div><span>9-20°C Комфортно</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#87CEEB;"></div><span>0-9°C Легкий холод</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#6495ED;"></div><span>-13-0°C Умеренный холод</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#4169E1;"></div><span>-27-(-13)°C Сильный холод</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#00008B;"></div><span>&lt;-27°C Экстремальный холод</span></div>
+                `;
+            }
+        }
+
+        function showDistrictInfo(moName) {
+            const districtData = currentMapData?.districtsData[moName];
+            if (!districtData) return;
+
+            document.getElementById('info-panel').style.display = 'block';
+
+            const tciInfo = getTciLevel(districtData.tci);
+            const utciInfo = getUtciLevel(districtData.utci);
+            const tciColor = getTciColor(districtData.tci);
+            const utciColor = getUtciColor(districtData.utci);
+            const tciIcon = getTciIcon(districtData.tci);
+            const utciIcon = getUtciIcon(districtData.utci);
+
+            let displayDate = currentDate;
+            if (currentMode === 'avg') {
+                const month = currentDate.split('-')[1];
+                displayDate = `Среднее за ${month}-й месяц`;
+            } else if (currentMode === 'period') {
+                const years = document.getElementById('period_years').options[document.getElementById('period_years').selectedIndex].text;
+                displayDate = years;
+            }
+
+            const detailButton = `<button class="detail-btn" onclick="showRasterDetail('${moName}', '${currentDate.replace('avg-', '').replace('period-', '')}', '${currentIndex}')">🔍 Детализация ${currentIndex === 'tci' ? 'TCI' : 'UTCI'} по ячейкам</button>`;
+
+            const infoContent = document.getElementById('info-content');
+            infoContent.innerHTML = `
+                <div class="info-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h4 style="color: white;">🏙️ РАЙОН</h4>
+                    <div class="value" style="color: white; font-size: 24px;">${moName}</div>
+                    <div class="unit" style="color: rgba(255,255,255,0.8);">${displayDate}</div>
+                </div>
+                <div class="info-card" style="border-top: 4px solid ${tciColor};">
+                    <h4>🌿 TCI ${tciIcon}</h4>
+                    <div class="value" style="color: ${tciColor};">${districtData.tci.toFixed(1)}</div>
+                    <div class="unit">баллов (0-100)</div>
+                    <div class="level">${tciInfo}</div>
+                </div>
+                <div class="info-card" style="border-top: 4px solid ${utciColor};">
+                    <h4>🔥 UTCI ${utciIcon}</h4>
+                    <div class="value" style="color: ${utciColor};">${districtData.utci.toFixed(1)}</div>
+                    <div class="unit">°C</div>
+                    <div class="level">${utciInfo}</div>
+                </div>
+                <div class="info-card">
+                    ${detailButton}
+                </div>
+            `;
+
+            loadGraph(moName);
+            document.getElementById('info-panel').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function loadGraph(moName) {
+            const response = await fetch(`/api/district_history?mo=${encodeURIComponent(moName)}`);
+            const data = await response.json();
+
+            const trace1 = {
+                x: data.map(d => d.date),
+                y: data.map(d => d.tci),
+                name: 'TCI',
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#667eea', width: 2 },
+                marker: { size: 4, color: '#764ba2' },
+                yaxis: 'y'
+            };
+
+            const trace2 = {
+                x: data.map(d => d.date),
+                y: data.map(d => d.utci),
+                name: 'UTCI',
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#e74c3c', width: 2 },
+                marker: { size: 4, color: '#c0392b' },
+                yaxis: 'y2'
+            };
+
+            const layout = {
+                title: `Динамика климатических индексов: ${moName}`,
+                xaxis: { title: 'Дата', tickangle: -45, tickfont: { size: 10 } },
+                yaxis: { title: 'TCI (баллы)', range: [0, 100], side: 'left', gridcolor: '#e0e0e0' },
+                yaxis2: { title: 'UTCI (°C)', range: [-40, 50], side: 'right', overlaying: 'y', gridcolor: '#e0e0e0' },
+                height: 400,
+                hovermode: 'closest',
+                margin: { l: 60, r: 60, t: 50, b: 80 },
+                plot_bgcolor: '#fafafa',
+                paper_bgcolor: 'white'
+            };
+
+            Plotly.newPlot('graph', [trace1, trace2], layout);
+        }
+
+        async function showRasterDetail(moName, date, index_type) {
+            const modal = document.getElementById('rasterModal');
+            modal.style.display = 'block';
+
+            let displayDate = date;
+            if (currentMode === 'avg') {
+                displayDate = `среднее за ${date.split('-')[1]}-й месяц`;
+            } else if (currentMode === 'period') {
+                displayDate = document.getElementById('period_years').options[document.getElementById('period_years').selectedIndex].text;
+            }
+
+            const indexLabel = index_type === 'tci' ? 'TCI' : 'UTCI';
+            const indexUnit = index_type === 'tci' ? 'баллы' : '°C';
+
+            document.getElementById('rasterTitle').innerHTML = `📊 Детализация ${indexLabel} по ячейкам: ${moName} (${displayDate})`;
+
+            try {
+                const statsResp = await fetch(`/api/district_raster_stats?mo=${encodeURIComponent(moName)}&date=${date}&index=${index_type}&mode=${currentMode}&years_back=${document.getElementById('period_years')?.value || 5}`);
+                const stats = await statsResp.json();
+
+                if (stats && stats.count > 0) {
+                    document.getElementById('rasterStats').innerHTML = `
+                        <div class="info-card"><h4>📐 Ячеек</h4><div class="value">${stats.count}</div><div class="unit">внутри района</div></div>
+                        <div class="info-card"><h4>📈 Максимум</h4><div class="value">${stats.max.toFixed(1)}</div><div class="unit">${indexUnit}</div></div>
+                        <div class="info-card"><h4>📉 Минимум</h4><div class="value">${stats.min.toFixed(1)}</div><div class="unit">${indexUnit}</div></div>
+                        <div class="info-card"><h4>📊 Среднее</h4><div class="value">${stats.mean.toFixed(1)}</div><div class="unit">${indexUnit}</div></div>
+                    `;
+                } else {
+                    document.getElementById('rasterStats').innerHTML = '<div class="info-card" style="width:100%;">Нет данных для отображения</div>';
+                }
+
+                const pointsResp = await fetch(`/api/district_raster?mo=${encodeURIComponent(moName)}&date=${date}&index=${index_type}&mode=${currentMode}&years_back=${document.getElementById('period_years')?.value || 5}`);
+                const points = await pointsResp.json();
+                const boundaryResp = await fetch(`/api/geojson_boundary?mo=${encodeURIComponent(moName)}`);
+                const boundaryGeoJson = await boundaryResp.json();
+
+                if (points && points.length > 0) {
+                    const lats = points.map(p => p.lat);
+                    const lons = points.map(p => p.lon);
+                    let values = index_type === 'tci' ? points.map(p => p.tci) : points.map(p => p.utci);
+                    const centerLat = lats.reduce((a,b) => a+b, 0) / lats.length;
+                    const centerLon = lons.reduce((a,b) => a+b, 0) / lons.length;
+
+                    let colorscale, cmin, cmax;
+                    if (index_type === 'tci') {
+                        colorscale = 'RdYlGn';
+                        cmin = 40;
+                        cmax = 100;
+                    } else {
+                        colorscale = 'RdYlBu_r';
+                        cmin = -50;
+                        cmax = 50;
+                    }
+
+                    const pointTrace = {
+                        type: 'scattermapbox',
+                        lat: lats,
+                        lon: lons,
+                        mode: 'markers',
+                        marker: {
+                            size: 22,
+                            color: values,
+                            colorscale: colorscale,
+                            cmin: cmin,
+                            cmax: cmax,
+                            colorbar: { title: index_type === 'tci' ? 'TCI' : 'UTCI (°C)' },
+                            opacity: 0.85,
+                            line: { color: 'black', width: 0.5 }
+                        },
+                        text: values.map(v => index_type === 'tci' ? `TCI: ${v.toFixed(1)}` : `UTCI: ${v.toFixed(1)}°C`),
+                        hoverinfo: 'text',
+                        name: `Ячейки ${indexLabel}`
+                    };
+
+                    const traces = [pointTrace];
+                    if (boundaryGeoJson && boundaryGeoJson.features && boundaryGeoJson.features.length > 0) {
+                        const coords = boundaryGeoJson.features[0].geometry.coordinates[0][0];
+                        const boundaryTrace = {
+                            type: 'scattermapbox',
+                            lat: coords.map(c => c[1]),
+                            lon: coords.map(c => c[0]),
+                            mode: 'lines',
+                            line: { color: '#e74c3c', width: 3 },
+                            name: 'Граница района',
+                            hoverinfo: 'skip'
+                        };
+                        traces.push(boundaryTrace);
+                    }
+
+                    const layout = {
+                        mapbox: { style: 'carto-positron', zoom: 8.5, center: { lat: centerLat, lon: centerLon } },
+                        height: 450,
+                        margin: { l: 0, r: 0, t: 0, b: 0 },
+                        legend: { x: 0, y: 1, bgcolor: 'rgba(255,255,255,0.8)' }
+                    };
+                    Plotly.newPlot('rasterMap', traces, layout, { responsive: true });
+
+                    const histTrace = {
+                        x: values,
+                        type: 'histogram',
+                        nbinsx: 15,
+                        marker: { color: '#667eea', line: { color: 'white', width: 1 } },
+                        xbins: { start: index_type === 'tci' ? 50 : -50, end: index_type === 'tci' ? 100 : 50, size: index_type === 'tci' ? 3 : 5 }
+                    };
+                    const histLayout = {
+                        title: `Распределение ${indexLabel} по ячейкам`,
+                        xaxis: { title: index_type === 'tci' ? 'TCI (баллы)' : 'UTCI (°C)' },
+                        yaxis: { title: 'Количество ячеек' },
+                        height: 350
+                    };
+                    Plotly.newPlot('rasterHistogram', [histTrace], histLayout);
+                } else {
+                    document.getElementById('rasterMap').innerHTML = '<div style="text-align:center;padding:50px;">❌ Нет данных для отображения</div>';
+                    document.getElementById('rasterHistogram').innerHTML = '';
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+            }
+        }
+
+        function closeRasterModal() {
+            document.getElementById('rasterModal').style.display = 'none';
+        }
+
+        async function updateRecommendations() {
+            const month = document.getElementById('recommend_month').value;
+            const period = document.getElementById('recommend_period').value;
+
+            const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+            document.getElementById('recommend_month_name').innerHTML = `(${monthNames[month-1]})`;
+
+            let periodText = '';
+            if (period === 'avg') {
+                periodText = 'средние многолетние';
+            } else {
+                periodText = `последние ${period} лет`;
+            }
+            document.getElementById('recommend_period_text').innerHTML = `📊 ${periodText}`;
+
+            try {
+                let url;
+                if (currentRecType === 'comfort') {
+                    url = `/api/recommendations?month=${month.padStart(2,'0')}&period=${period}`;
+                } else {
+                    url = `/api/recommendations_seasonal?month=${month.padStart(2,'0')}&period=${period}&season_type=${currentSeason}`;
+                }
+
+                const response = await fetch(url);
+                const recommendations = await response.json();
+                currentRecommendations = recommendations;
+
+                const listDiv = document.getElementById('recommendations_list');
+
+                if (recommendations.length === 0) {
+                    listDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Нет данных для отображения</div>';
+                    return;
+                }
+
+                let html = '';
+                for (let i = 0; i < recommendations.length; i++) {
+                    const rec = recommendations[i];
+                    const rankClass = i === 0 ? 'rank-1' : (i === 1 ? 'rank-2' : (i === 2 ? 'rank-3' : ''));
+
+                    let typeIcon = '';
+                    let typeName = '';
+                    if (currentRecType === 'comfort') {
+                        typeIcon = '🌡️';
+                        typeName = 'Комфортный климат';
+                    } else {
+                        if (currentSeason === 'winter') {
+                            typeIcon = '❄️';
+                            typeName = 'Зимний отдых';
+                        } else if (currentSeason === 'summer') {
+                            typeIcon = '☀️';
+                            typeName = 'Летний отдых';
+                        } else {
+                            typeIcon = '🏛️';
+                            typeName = 'Круглогодичный';
+                        }
+                    }
+
+                    html += `
+                        <div class="rec-item ${rankClass}" onclick="selectRecommendationDistrict('${rec.mo}')">
+                            <div class="rec-name">${i+1}. ${rec.mo}</div>
+                            <div class="rec-rating">⭐ Рейтинг: ${rec.rating}</div>
+                            <div class="rec-stats">
+                                <span>🌿 TCI: ${rec.tci}</span>
+                                <span>🔥 UTCI: ${rec.utci !== null ? rec.utci + '°C' : '—'}</span>
+                            </div>
+                            <div class="rec-stats">
+                                <span>${typeIcon} ${typeName}</span>
+                                <span>🏛️ Объектов: ${rec.sights_count}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                listDiv.innerHTML = html;
+
+                await highlightRecommendationDistricts(recommendations, month, period);
+
+            } catch(e) {
+                console.error('Ошибка загрузки рекомендаций:', e);
+                document.getElementById('recommendations_list').innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">❌ Ошибка загрузки</div>';
+            }
+        }
+
+        async function highlightRecommendationDistricts(recommendations, month, period) {
+            const topDistricts = recommendations.map(r => r.mo);
+            highlightedDistricts = topDistricts;
+
+            let requestUrl;
+            if (period === 'avg') {
+                requestUrl = `/api/map_data?index=tci&mode=avg&month=${month.padStart(2,'0')}`;
+            } else {
+                requestUrl = `/api/map_data?index=tci&mode=period&month=${month.padStart(2,'0')}&years_back=${period}`;
+            }
+
+            try {
+                const response = await fetch(requestUrl);
+                const data = await response.json();
+                currentMapData = data;
+
+                if (data.figData && data.figData.data && data.figData.data.length > 0) {
+                    const figData = JSON.parse(JSON.stringify(data.figData.data));
+
+                    if (figData[0] && figData[0].marker) {
+                        figData[0].marker.opacity = 0.35;
+                    }
+
+                    if (figData[0]) {
+                        figData[0].hovertemplate = '<b>%{location}</b><br>TCI: %{z:.1f}<extra></extra>';
+                    }
+
+                    Plotly.newPlot('map', figData, data.figData.layout, { responsive: true });
+
+                    const geojsonResponse = await fetch('/api/geojson');
+                    const geojson = await geojsonResponse.json();
+
+                    const highlightTraces = [];
+                    for (const rec of recommendations) {
+                        for (const feature of geojson.features) {
+                            if (feature.properties.name === rec.mo) {
+                                const coords = feature.geometry.coordinates[0][0];
+                                highlightTraces.push({
+                                    type: 'scattermapbox',
+                                    lat: coords.map(c => c[1]),
+                                    lon: coords.map(c => c[0]),
+                                    mode: 'lines',
+                                    line: { color: '#f1c40f', width: 4 },
+                                    hoverinfo: 'skip',
+                                    name: `⭐ ${rec.mo} (${rec.rating} баллов)`
+                                });
+                                break;
+                            }
+                        }
+                    }
+
+                    if (highlightTraces.length > 0) {
+                        Plotly.addTraces('map', highlightTraces);
+                    }
+
+                    document.getElementById('map').on('plotly_click', function(clickData) {
+                        if (clickData.points && clickData.points[0] && clickData.points[0].location) {
+                            const moName = clickData.points[0].location;
+                            if (topDistricts.includes(moName)) {
+                                showDistrictInfo(moName);
+                            } else {
+                                const infoDiv = document.getElementById('selected-info');
+                                const originalText = infoDiv.innerHTML;
+                                infoDiv.innerHTML = `⚠️ Район "${moName}" не входит в ТОП-5. Нажмите на рекомендованный район для деталей.`;
+                                infoDiv.style.background = '#fff3cd';
+                                setTimeout(() => {
+                                    infoDiv.innerHTML = originalText;
+                                    infoDiv.style.background = '#f0f8ff';
+                                }, 2000);
+                            }
+                        }
+                    });
+
+                    updateLegend();
+                }
+            } catch(e) {
+                console.error('Ошибка подсветки:', e);
+            }
+        }
+
+        async function selectRecommendationDistrict(moName) {
+            const rec = currentRecommendations.find(r => r.mo === moName);
+            if (rec) {
+                const tempDistrictsData = {};
+                tempDistrictsData[moName] = {
+                    tci: rec.tci,
+                    utci: rec.utci
+                };
+
+                const tempMapData = {
+                    districtsData: tempDistrictsData,
+                    figData: currentMapData?.figData
+                };
+
+                currentMapData = tempMapData;
+                showDistrictInfo(moName);
+            }
+        }
+
+        // === ФУНКЦИИ ДЛЯ ТРЕТЬЕЙ ВКЛАДКИ (ТУРИСТИЧЕСКИЕ ОБЪЕКТЫ) ===
+
+        async function loadTourismCategories() {
+            const response = await fetch('/api/tourism_categories');
+            const categories = await response.json();
+            sightsCategories = categories;
+            const select = document.getElementById('sights_category');
+            select.innerHTML = '';
+            for (const cat of categories) {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                select.appendChild(option);
+            }
+        }
+
+        function resetDistrictSelection() {
+            selectedDistrict = null;
+            updateTourismMap();
+            document.getElementById('info-panel').style.display = 'none';
+        }
+
+        async function updateTourismMap() {
+            const month = String(document.getElementById('tourism_month').value).padStart(2, '0');
+            const category = document.getElementById('sights_category').value;
+
+            if (selectedDistrict) {
+                await selectDistrictForSights(selectedDistrict);
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/tourism_sights_all?category=${encodeURIComponent(category)}`);
+                const sights = await response.json();
+
+                const geoResponse = await fetch('/api/geojson');
+                const geojson = await geoResponse.json();
+
+                const boundaryTrace = {
+                    type: 'scattermapbox',
+                    lat: [],
+                    lon: [],
+                    mode: 'lines',
+                    line: { color: '#333', width: 1 },
+                    hoverinfo: 'skip'
+                };
+
+                for (const feature of geojson.features) {
+                    const coords = feature.geometry.coordinates[0][0];
+                    boundaryTrace.lat.push(...coords.map(c => c[1]));
+                    boundaryTrace.lon.push(...coords.map(c => c[0]));
+                    boundaryTrace.lat.push(null);
+                    boundaryTrace.lon.push(null);
+                }
+
+                if (category === 'Все') {
+                    const sightsByCategory = {};
+                    for (const sight of sights) {
+                        const cat = sight.category || 'Другое';
+                        if (!sightsByCategory[cat]) sightsByCategory[cat] = [];
+                        sightsByCategory[cat].push(sight);
+                    }
+
+                    const traces = [boundaryTrace];
+                    for (const [cat, catSights] of Object.entries(sightsByCategory)) {
+                        const color = categoryColors[cat] || '#95a5a6';
+                        traces.push({
+                            type: 'scattermapbox',
+                            lat: catSights.map(s => s.lat),
+                            lon: catSights.map(s => s.lon),
+                            mode: 'markers',
+                            marker: { size: 10, color: color, opacity: 0.85 },
+                            text: catSights.map(s => `<b>${s.name}</b><br>${s.category || ''}`),
+                            hoverinfo: 'text',
+                            name: cat
+                        });
+                    }
+
+                    const layout = {
+                        mapbox: { style: 'carto-positron', zoom: 5.3, center: { lat: 57.0, lon: 105.0 } },
+                        height: 600,
+                        margin: { l: 0, r: 0, t: 0, b: 0 }
+                    };
+
+                    Plotly.newPlot('map', traces, layout, { responsive: true });
+
+                    document.getElementById('legend').innerHTML = `
+                        <div class="legend-item"><div style="width:30px;height:20px;background:#2ecc71;"></div><span>Природный</span></div>
+                        <div class="legend-item"><div style="width:30px;height:20px;background:#e67e22;"></div><span>Развлекательный</span></div>
+                        <div class="legend-item"><div style="width:30px;height:20px;background:#1abc9c;"></div><span>Лечебно-оздоровительный</span></div>
+                        <div class="legend-item"><div style="width:30px;height:20px;background:#9b59b6;"></div><span>Культурно-познавательный</span></div>
+                        <div class="legend-item"><div style="width:30px;height:20px;background:#f1c40f;"></div><span>Религиозный</span></div>
+                        <div class="legend-item"><div style="width:30px;height:20px;background:#e74c3c;"></div><span>Активный</span></div>
+                        <div class="legend-item"><div style="width:30px;height:20px;background:#27ae60;"></div><span>Сельский</span></div>
+                        <div class="legend-item"><div style="width:30px;height:20px;background:#3498db;"></div><span>Событийный</span></div>
+                        <div class="legend-item"><button class="detail-btn" style="padding:5px 10px; margin-top:5px;" onclick="resetDistrictSelection()">🗺️ Сбросить выбор района</button></div>
+                    `;
+
+                } else {
+                    const markerColor = categoryColors[category] || '#e74c3c';
+                    const markersTrace = {
+                        type: 'scattermapbox',
+                        lat: sights.map(s => s.lat),
+                        lon: sights.map(s => s.lon),
+                        mode: 'markers',
+                        marker: { size: 10, color: markerColor, opacity: 0.85 },
+                        text: sights.map(s => `<b>${s.name}</b><br>${s.category || ''}`),
+                        hoverinfo: 'text',
+                        name: category
+                    };
+
+                    const layout = {
+                        mapbox: { style: 'carto-positron', zoom: 5.3, center: { lat: 57.0, lon: 105.0 } },
+                        height: 600,
+                        margin: { l: 0, r: 0, t: 0, b: 0 }
+                    };
+
+                    Plotly.newPlot('map', [boundaryTrace, markersTrace], layout, { responsive: true });
+
+                    document.getElementById('legend').innerHTML = `
+                        <div class="legend-item"><div style="width:30px;height:20px;background:${markerColor};border-radius:3px;"></div><span>${category} (${sights.length} объектов)</span></div>
+                        <div class="legend-item"><button class="detail-btn" style="padding:5px 10px; margin-top:5px;" onclick="resetDistrictSelection()">🗺️ Сбросить выбор района</button></div>
+                    `;
+                }
+
+            } catch(e) {
+                console.error(e);
+                document.getElementById('map').innerHTML = '<div style="text-align:center;padding:50px;">❌ Ошибка загрузки карты</div>';
+            }
+        }
+
+        async function showDistrictsAnalysis() {
+            const month = String(document.getElementById('tourism_month').value).padStart(2, '0');
+            const response = await fetch(`/api/tourism_quadrant?month=${month}`);
+            const quadrants = await response.json();
+
+            const groups = {
+                "Эталонная территория": [],
+                "Спящий гигант": [],
+                "Устойчивый туризм": [],
+                "Сложная территория": []
+            };
+
+            for (const [mo, data] of Object.entries(quadrants)) {
+                if (groups[data.quadrant]) {
+                    groups[data.quadrant].push({mo, ...data});
+                }
+            }
+
+            let html = '<div style="display:flex; flex-wrap:wrap; gap:20px; justify-content:center;">';
+
+            for (const [quadrant, items] of Object.entries(groups)) {
+                if (items.length === 0) continue;
+
+                const color = items[0].color;
+                const icon = items[0].icon;
+
+                html += `
+                    <div style="flex:1; min-width:250px; border-left: 4px solid ${color}; padding:10px; background:#f8f9fa; border-radius:8px;">
+                        <h4 style="color:${color};">${icon} ${quadrant}</h4>
+                        <div style="max-height:300px; overflow-y:auto;">
+                `;
+
+                for (const item of items) {
+                    html += `
+                        <div onclick="selectDistrictForSights('${item.mo}')"
+                             style="padding:8px; margin:5px; background:white; border-radius:5px; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                            <strong>${item.mo}</strong><br>
+                            <span style="font-size:12px;">TCI: ${item.tci} | Объектов: ${item.sights_count}</span>
+                        </div>
+                    `;
+                }
+
+                html += `</div></div>`;
+            }
+
+            html += `</div>`;
+
+            const modal = document.getElementById('districtsModal');
+            document.getElementById('districtsContent').innerHTML = html;
+            modal.style.display = 'block';
+        }
+
+        async function selectDistrictForSights(moName) {
+            selectedDistrict = moName;
+            closeDistrictsModal();
+
+            const category = document.getElementById('sights_category').value;
+            const month = String(document.getElementById('tourism_month').value).padStart(2, '0');
+            const year = 2024;
+            const date = `${year}-${month}`;
+
+            const sightsResponse = await fetch(`/api/tourism_sights_by_district?mo=${encodeURIComponent(moName)}&category=${encodeURIComponent(category)}`);
+            const sights = await sightsResponse.json();
+
+            let tciValue = null;
+            let utciValue = null;
+
+            try {
+                const climateResponse = await fetch(`/api/map_data?date=${date}&index=tci&mode=actual`);
+                const climateData = await climateResponse.json();
+                if (climateData.districtsData && climateData.districtsData[moName]) {
+                    tciValue = climateData.districtsData[moName].tci;
+                    utciValue = climateData.districtsData[moName].utci;
+                }
+            } catch(e) {
+                console.error("Ошибка загрузки климатических данных:", e);
+            }
+
+            const geoResponse = await fetch('/api/geojson_boundary?mo=' + encodeURIComponent(moName));
+            const boundaryGeoJson = await geoResponse.json();
+
+            const allGeoResponse = await fetch('/api/geojson');
+            const allGeojson = await allGeoResponse.json();
+
+            const allBoundariesTrace = {
+                type: 'scattermapbox',
+                lat: [],
+                lon: [],
+                mode: 'lines',
+                line: { color: '#ccc', width: 0.5 },
+                hoverinfo: 'skip'
+            };
+
+            for (const feature of allGeojson.features) {
+                const coords = feature.geometry.coordinates[0][0];
+                allBoundariesTrace.lat.push(...coords.map(c => c[1]));
+                allBoundariesTrace.lon.push(...coords.map(c => c[0]));
+                allBoundariesTrace.lat.push(null);
+                allBoundariesTrace.lon.push(null);
+            }
+
+            let selectedBoundaryTrace = null;
+            if (boundaryGeoJson.features && boundaryGeoJson.features.length > 0) {
+                const coords = boundaryGeoJson.features[0].geometry.coordinates[0][0];
+                selectedBoundaryTrace = {
+                    type: 'scattermapbox',
+                    lat: coords.map(c => c[1]),
+                    lon: coords.map(c => c[0]),
+                    mode: 'lines',
+                    line: { color: '#e74c3c', width: 3 },
+                    hoverinfo: 'skip'
+                };
+            }
+
+            if (category === 'Все') {
+                const sightsByCategory = {};
+                for (const sight of sights) {
+                    const cat = sight.category || 'Другое';
+                    if (!sightsByCategory[cat]) sightsByCategory[cat] = [];
+                    sightsByCategory[cat].push(sight);
+                }
+
+                const traces = [allBoundariesTrace];
+                if (selectedBoundaryTrace) traces.push(selectedBoundaryTrace);
+                for (const [cat, catSights] of Object.entries(sightsByCategory)) {
+                    const color = categoryColors[cat] || '#95a5a6';
+                    traces.push({
+                        type: 'scattermapbox',
+                        lat: catSights.map(s => s.lat),
+                        lon: catSights.map(s => s.lon),
+                        mode: 'markers',
+                        marker: { size: 12, color: color, opacity: 0.9 },
+                        text: catSights.map(s => `<b>${s.name}</b><br>${s.category || ''}`),
+                        hoverinfo: 'text',
+                        name: cat
+                    });
+                }
+
+                const centerLat = sights.length ? sights.reduce((a,b) => a+b.lat, 0)/sights.length : 57.0;
+                const centerLon = sights.length ? sights.reduce((a,b) => a+b.lon, 0)/sights.length : 105.0;
+
+                const layout = {
+                    mapbox: { style: 'carto-positron', zoom: 8, center: { lat: centerLat, lon: centerLon } },
+                    height: 600,
+                    margin: { l: 0, r: 0, t: 0, b: 0 }
+                };
+
+                Plotly.newPlot('map', traces, layout, { responsive: true });
+
+                document.getElementById('legend').innerHTML = `
+                    <div class="legend-item"><div style="width:30px;height:20px;background:#2ecc71;"></div><span>Природный</span></div>
+                    <div class="legend-item"><div style="width:30px;height:20px;background:#e67e22;"></div><span>Развлекательный</span></div>
+                    <div class="legend-item"><div style="width:30px;height:20px;background:#1abc9c;"></div><span>Лечебно-оздоровительный</span></div>
+                    <div class="legend-item"><div style="width:30px;height:20px;background:#9b59b6;"></div><span>Культурно-познавательный</span></div>
+                    <div class="legend-item"><div style="width:30px;height:20px;background:#f1c40f;"></div><span>Религиозный</span></div>
+                    <div class="legend-item"><div style="width:30px;height:20px;background:#e74c3c;"></div><span>Активный</span></div>
+                    <div class="legend-item"><div style="width:30px;height:20px;background:#27ae60;"></div><span>Сельский</span></div>
+                    <div class="legend-item"><div style="width:30px;height:20px;background:#3498db;"></div><span>Событийный</span></div>
+                    <div class="legend-item"><div style="width:30px;height:3px;background:#e74c3c;"></div><span>Выбранный район: ${moName}</span></div>
+                    <div class="legend-item"><button class="detail-btn" style="padding:5px 10px; margin-top:5px;" onclick="resetDistrictSelection()">🗺️ Показать всю область</button></div>
+                `;
+
+            } else {
+                const markerColor = categoryColors[category] || '#e74c3c';
+                const markersTrace = {
+                    type: 'scattermapbox',
+                    lat: sights.map(s => s.lat),
+                    lon: sights.map(s => s.lon),
+                    mode: 'markers',
+                    marker: { size: 12, color: markerColor, opacity: 0.9 },
+                    text: sights.map(s => `<b>${s.name}</b><br>${s.category || ''}`),
+                    hoverinfo: 'text',
+                    name: `${moName} (${sights.length} объектов)`
+                };
+
+                const traces = [allBoundariesTrace];
+                if (selectedBoundaryTrace) traces.push(selectedBoundaryTrace);
+                traces.push(markersTrace);
+
+                const centerLat = sights.length ? sights.reduce((a,b) => a+b.lat, 0)/sights.length : 57.0;
+                const centerLon = sights.length ? sights.reduce((a,b) => a+b.lon, 0)/sights.length : 105.0;
+
+                const layout = {
+                    mapbox: { style: 'carto-positron', zoom: 8, center: { lat: centerLat, lon: centerLon } },
+                    height: 600,
+                    margin: { l: 0, r: 0, t: 0, b: 0 }
+                };
+
+                Plotly.newPlot('map', traces, layout, { responsive: true });
+
+                document.getElementById('legend').innerHTML = `
+                    <div class="legend-item"><div style="width:30px;height:20px;background:${markerColor};"></div><span>${category} (${sights.length} объектов)</span></div>
+                    <div class="legend-item"><div style="width:30px;height:3px;background:#e74c3c;"></div><span>Выбранный район: ${moName}</span></div>
+                    <div class="legend-item"><button class="detail-btn" style="padding:5px 10px; margin-top:5px;" onclick="resetDistrictSelection()">🗺️ Показать всю область</button></div>
+                `;
+            }
+
+            document.getElementById('info-panel').style.display = 'block';
+
+            const tciIconE = getTciIcon(tciValue || 0);
+            const utciIconE = getUtciIcon(utciValue || 0);
+            const tciColorC = getTciColor(tciValue || 0);
+            const utciColorC = getUtciColor(utciValue || 0);
+            const tciLevelText = getTciLevel(tciValue || 0);
+            const utciLevelText = getUtciLevel(utciValue || 0);
+            const categoryIcon = categoryIcons[category] || '📍';
+
+            let infoHtml = `
+                <div class="info-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h4 style="color: white;">🏙️ РАЙОН</h4>
+                    <div class="value" style="color: white; font-size: 28px;">${moName}</div>
+                </div>
+
+                <div class="info-card" style="border-top: 4px solid ${tciColorC};">
+                    <h4>🌿 TCI ${tciIconE}</h4>
+                    <div class="value" style="color: ${tciColorC};">${tciValue !== null ? tciValue.toFixed(1) : '—'}</div>
+                    <div class="unit">баллов (0-100)</div>
+                    <div class="level">${tciValue !== null ? tciLevelText : 'Нет данных'}</div>
+                </div>
+
+                <div class="info-card" style="border-top: 4px solid ${utciColorC};">
+                    <h4>🔥 UTCI ${utciIconE}</h4>
+                    <div class="value" style="color: ${utciColorC};">${utciValue !== null ? utciValue.toFixed(1) : '—'}</div>
+                    <div class="unit">°C</div>
+                    <div class="level">${utciValue !== null ? utciLevelText : 'Нет данных'}</div>
+                </div>
+
+                <div class="info-card">
+                    <h4>${categoryIcon} ${category}</h4>
+                    <div class="value">${sights.length}</div>
+                    <div class="unit">объектов туризма</div>
+                </div>
+            `;
+
+            if (sights.length > 0) {
+                infoHtml += `
+                    <div class="info-card" style="width:100%; max-width: 100%;">
+                        <h4>📋 СПИСОК ОБЪЕКТОВ</h4>
+                        <div class="sights-list">
+                `;
+                for (const sight of sights.slice(0, 20)) {
+                    const catIcon = categoryIcons[sight.category] || '📍';
+                    infoHtml += `
+                        <div class="sight-item">
+                            <span><strong>${sight.name}</strong></span>
+                            <span style="font-size: 11px; color: #888;">${catIcon} ${sight.category || ''}</span>
+                        </div>
+                    `;
+                }
+                if (sights.length > 20) {
+                    infoHtml += `<div class="sight-item" style="color:#888;">... и ещё ${sights.length - 20} объектов</div>`;
+                }
+                infoHtml += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('info-content').innerHTML = infoHtml;
+            document.getElementById('info-panel').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function closeDistrictsModal() {
+            document.getElementById('districtsModal').style.display = 'none';
+        }
+
+        // Инициализация
+        window.onload = function() {
+            setMode('actual');
+            setIndex('tci');
+            setRecType('comfort');
+            setSeason('winter');
+            loadTourismCategories();
+            document.getElementById('year').addEventListener('change', updateMap);
+            document.getElementById('month').addEventListener('change', updateMap);
+            document.getElementById('period_years').addEventListener('change', updateMap);
+            document.getElementById('tourism_month').addEventListener('change', function() {
+                selectedDistrict = null;
+                updateTourismMap();
+            });
+            document.getElementById('sights_category').addEventListener('change', function() {
+                selectedDistrict = null;
+                updateTourismMap();
+            });
+            updateMap();
+        };
+    </script>
+</body>
+</html>

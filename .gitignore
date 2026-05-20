@@ -1,0 +1,24 @@
+# Виртуальное окружение
+venv/
+env/
+ENV/
+
+# Кэш Python
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Логи
+*.log
+
+# Тестовые файлы
+mo_proverka.py
+
+# OS
+.DS_Store
+Thumbs.db
