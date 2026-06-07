@@ -1,24 +1,18 @@
-# Виртуальное окружение
-venv/
-env/
-ENV/
 
-# Кэш Python
+venv/
+
 __pycache__/
 *.pyc
 *.pyo
 
-# IDE
 .idea/
 .vscode/
-*.swp
 
-# Логи
-*.log
-
-# Тестовые файлы
-mo_proverka.py
-
-# OS
 .DS_Store
 Thumbs.db
+
+tourism-climate/data/tci_final.nc
+tourism-climate/data/utci_clean_fixed.nc
+
+district_cells_cache.pkl
+*.pkl

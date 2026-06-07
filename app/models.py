@@ -138,6 +138,7 @@ class ClimateData:
 
 
     def get_data_by_date(self, date_input):
+
         matching_rows = self.df[self.df['time'].str.startswith(date_input)]
         return matching_rows.iloc[0] if not matching_rows.empty else None
 
